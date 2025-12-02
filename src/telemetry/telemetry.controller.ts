@@ -1,4 +1,36 @@
-import { Controller } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Logger,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
+import { TelemetryService } from './telemetry.service';
+import { TelemetryDto } from './dto/telemetry.dto';
 
-@Controller('telemetry')
-export class TelemetryController {}
+@Controller('api/v1')
+export class TelemetryController {
+  private readonly logger = new Logger(TelemetryController.name);
+
+  constructor(private readonly telemetryService: TelemetryService) {}
+
+  @Post('telemetry')
+  @HttpCode(HttpStatus.CREATED)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async ingestTelemetry(
+    @Body() data: TelemetryDto | TelemetryDto[],
+  ): Promise<{ message: string; count: number }> {
+    const count = Array.isArray(data) ? data.length : 1;
+    this.logger.log(`Received ${count} telemetry reading(s)`);
+
+    await this.telemetryService.ingestTelemetry(data);
+
+    return {
+      message: 'Telemetry ingested successfully',
+      count,
+    };
+  }
+}
