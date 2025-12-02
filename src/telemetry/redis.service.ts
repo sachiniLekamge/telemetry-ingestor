@@ -48,6 +48,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return data ? JSON.parse(data) : null;
   }
 
+  async setAlertDedup(deviceId: string, reason: string): Promise<boolean> {
+    const key = `alert:${deviceId}:${reason}`;
+    const result = await this.client.set(key, '1', 'EX', 60, 'NX'); // 60s dedup
+    return result === 'OK';
+  }
+
   async ping(): Promise<boolean> {
     try {
       const result = await this.client.ping();
