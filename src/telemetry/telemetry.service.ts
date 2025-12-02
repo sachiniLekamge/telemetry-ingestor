@@ -36,4 +36,24 @@ export class TelemetryService {
       }
     }
   }
+
+  async getLatest(deviceId: string): Promise<any> {
+    let latest;
+    const telemetry = await this.telemetryModel
+      .findOne({ deviceId })
+      .sort({ ts: -1 })
+      .lean()
+      .exec();
+
+    if (telemetry) {
+      latest = {
+        deviceId: telemetry.deviceId,
+        siteId: telemetry.siteId,
+        ts: telemetry.ts.toISOString(),
+        metrics: telemetry.metrics,
+      };
+    }
+
+    return latest;
+  }
 }
