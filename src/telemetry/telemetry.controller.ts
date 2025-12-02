@@ -61,4 +61,16 @@ export class TelemetryController {
 
     return this.telemetryService.getSiteSummary(siteId, query.from, query.to);
   }
+
+  @Get('health')
+  async health(): Promise<any> {
+    const health = await this.telemetryService.checkHealth();
+    const isHealthy = health.mongodb && health.redis;
+
+    return {
+      status: isHealthy ? 'healthy' : 'unhealthy',
+      services: health,
+      timestamp: new Date().toISOString(),
+    };
+  }
 }
