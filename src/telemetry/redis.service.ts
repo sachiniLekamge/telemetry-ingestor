@@ -37,4 +37,17 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       await this.client.quit();
     }
   }
+
+  async setLatest(deviceId: string, data: unknown) {
+    if (!this.client) return;
+    const key = `latest:${deviceId}`;
+    await this.client.setex(key, 86400, JSON.stringify(data));
+  }
+
+  async getLatest(deviceId: string) {
+    if (!this.client) return null;
+    const key = `latest:${deviceId}`;
+    const value = await this.client.get(key);
+    return value ? JSON.parse(value) : null;
+  }
 }
