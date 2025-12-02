@@ -1,9 +1,12 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
+  Param,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Logger,
   UsePipes,
   ValidationPipe,
@@ -32,5 +35,18 @@ export class TelemetryController {
       message: 'Telemetry ingested successfully',
       count,
     };
+  }
+
+  @Get('devices/:deviceId/latest')
+  async getLatest(@Param('deviceId') deviceId: string): Promise<any> {
+    this.logger.log(`Fetching latest data for device ${deviceId}`);
+
+    const latest = await this.telemetryService.getLatest(deviceId);
+
+    if (!latest) {
+      throw new NotFoundException(`No data found for device ${deviceId}`);
+    }
+
+    return latest;
   }
 }
