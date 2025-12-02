@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Telemetry, TelemetryDocument } from './schemas/telemetry.schema';
 import { TelemetryDto } from './dto/telemetry.dto';
 import { RedisService } from './redis.service';
+import { AlertService } from './alert.service';
 
 @Injectable()
 export class TelemetryService {
@@ -13,6 +14,7 @@ export class TelemetryService {
     @InjectModel(Telemetry.name)
     private telemetryModel: Model<TelemetryDocument>,
     private redisService: RedisService,
+    private alertService: AlertService,
   ) {}
 
   async ingestTelemetry(data: TelemetryDto | TelemetryDto[]): Promise<void> {
@@ -31,6 +33,14 @@ export class TelemetryService {
 
         // Update cache (latest reading per device)
         await this.redisService.setLatest(reading.deviceId, reading);
+
+        // Check for alerts
+        await this.alertService.checkAndSendAlert(
+          reading.deviceId,
+          reading.siteId,
+          reading.ts,
+          reading.metrics,
+        );
 
         this.logger.debug(`Processed telemetry for device ${reading.deviceId}`);
       } catch (error) {
