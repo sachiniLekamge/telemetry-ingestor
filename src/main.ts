@@ -21,6 +21,20 @@ async function bootstrap() {
     }),
   );
 
+  app.use((req, res, next) => {
+    const contentLength = parseInt(req.headers['content-length'] || '0');
+    const maxSize = 1024 * 1024;
+
+    if (contentLength > maxSize) {
+      return res.status(413).json({
+        statusCode: 413,
+        message: 'Payload too large',
+      });
+    }
+
+    next();
+  });
+
   await app.listen(port);
   logger.log(`Application is running on: http://localhost:${port}`);
 }
