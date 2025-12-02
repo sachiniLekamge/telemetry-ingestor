@@ -107,4 +107,9 @@ export class TelemetryService {
       }
     );
   }
+
+  async checkHealth(): Promise<{ mongodb: boolean }> {
+    const mongodb = this.telemetryModel.db.readyState === 1;
+    return { mongodb };
+  }
 }
