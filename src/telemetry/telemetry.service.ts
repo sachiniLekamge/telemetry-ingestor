@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Telemetry, TelemetryDocument } from './schemas/telemetry.schema';
 import { TelemetryDto } from './dto/telemetry.dto';
+import { RedisService } from './redis.service';
 
 @Injectable()
 export class TelemetryService {
@@ -11,6 +12,7 @@ export class TelemetryService {
   constructor(
     @InjectModel(Telemetry.name)
     private telemetryModel: Model<TelemetryDocument>,
+    private redisService: RedisService,
   ) {}
 
   async ingestTelemetry(data: TelemetryDto | TelemetryDto[]): Promise<void> {
@@ -27,6 +29,9 @@ export class TelemetryService {
         });
         await telemetry.save();
 
+        // Update cache (latest reading per device)
+        await this.redisService.setLatest(reading.deviceId, reading);
+
         this.logger.debug(`Processed telemetry for device ${reading.deviceId}`);
       } catch (error) {
         this.logger.error(
@@ -38,7 +43,16 @@ export class TelemetryService {
   }
 
   async getLatest(deviceId: string): Promise<any> {
-    let latest;
+    // Try Redis first
+    let latest = await this.redisService.getLatest(deviceId);
+
+    if (latest) {
+      this.logger.debug(`Cache hit for device ${deviceId}`);
+      return latest;
+    }
+
+    // Fallback to MongoDB
+    this.logger.debug(`Cache miss for device ${deviceId}, querying MongoDB`);
     const telemetry = await this.telemetryModel
       .findOne({ deviceId })
       .sort({ ts: -1 })
@@ -46,12 +60,16 @@ export class TelemetryService {
       .exec();
 
     if (telemetry) {
+      // Reconstruct the response format
       latest = {
         deviceId: telemetry.deviceId,
         siteId: telemetry.siteId,
         ts: telemetry.ts.toISOString(),
         metrics: telemetry.metrics,
       };
+
+      // Update cache
+      await this.redisService.setLatest(deviceId, latest);
     }
 
     return latest;
@@ -108,8 +126,9 @@ export class TelemetryService {
     );
   }
 
-  async checkHealth(): Promise<{ mongodb: boolean }> {
+  async checkHealth(): Promise<{ mongodb: boolean; redis: boolean }> {
     const mongodb = this.telemetryModel.db.readyState === 1;
-    return { mongodb };
+    const redis = await this.redisService.ping();
+    return { mongodb, redis };
   }
 }
