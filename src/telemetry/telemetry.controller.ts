@@ -4,6 +4,7 @@ import {
   Get,
   Body,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
   NotFoundException,
@@ -12,7 +13,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { TelemetryService } from './telemetry.service';
-import { TelemetryDto } from './dto/telemetry.dto';
+import { TelemetryDto, SiteSummaryQueryDto } from './dto/telemetry.dto';
 
 @Controller('api/v1')
 export class TelemetryController {
@@ -48,5 +49,16 @@ export class TelemetryController {
     }
 
     return latest;
+  }
+
+  @Get('sites/:siteId/summary')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getSiteSummary(
+    @Param('siteId') siteId: string,
+    @Query() query: SiteSummaryQueryDto,
+  ): Promise<any> {
+    this.logger.log(`Fetching summary for site ${siteId}`);
+
+    return this.telemetryService.getSiteSummary(siteId, query.from, query.to);
   }
 }
