@@ -56,4 +56,55 @@ export class TelemetryService {
 
     return latest;
   }
+
+  async getSiteSummary(siteId: string, from: string, to: string): Promise<any> {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    this.logger.log(
+      `Aggregating data for site ${siteId} from ${from} to ${to}`,
+    );
+
+    const result = await this.telemetryModel.aggregate([
+      {
+        $match: {
+          siteId,
+          ts: { $gte: fromDate, $lte: toDate },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 },
+          avgTemperature: { $avg: '$metrics.temperature' },
+          maxTemperature: { $max: '$metrics.temperature' },
+          avgHumidity: { $avg: '$metrics.humidity' },
+          maxHumidity: { $max: '$metrics.humidity' },
+          uniqueDevices: { $addToSet: '$deviceId' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          count: 1,
+          avgTemperature: { $round: ['$avgTemperature', 2] },
+          maxTemperature: 1,
+          avgHumidity: { $round: ['$avgHumidity', 2] },
+          maxHumidity: 1,
+          uniqueDevices: { $size: '$uniqueDevices' },
+        },
+      },
+    ]);
+
+    return (
+      result[0] || {
+        count: 0,
+        avgTemperature: 0,
+        maxTemperature: 0,
+        avgHumidity: 0,
+        maxHumidity: 0,
+        uniqueDevices: 0,
+      }
+    );
+  }
 }
