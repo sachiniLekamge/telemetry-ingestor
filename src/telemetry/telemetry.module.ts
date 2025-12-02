@@ -4,6 +4,7 @@ import { HttpModule } from '@nestjs/axios';
 import { TelemetryController } from './telemetry.controller';
 import { TelemetryService } from './telemetry.service';
 import { RedisService } from './redis.service';
+import { AlertService } from './alert.service';
 import { Telemetry, TelemetrySchema } from './schemas/telemetry.schema';
 
 @Module({
@@ -17,6 +18,6 @@ import { Telemetry, TelemetrySchema } from './schemas/telemetry.schema';
     }),
   ],
   controllers: [TelemetryController],
-  providers: [TelemetryService, RedisService],
+  providers: [TelemetryService, RedisService, AlertService],
 })
 export class TelemetryModule {}
