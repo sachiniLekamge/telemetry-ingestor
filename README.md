@@ -17,7 +17,7 @@ Create a `.env` file in the root directory:
 ```env
 MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/telemetry?retryWrites=true&w=majority
 REDIS_URL=redis://localhost:6379
-ALERT_WEBHOOK_URL=https://webhook.site/96951d2c-431f-452d-84bf-272c8d87d5ab
+ALERT_WEBHOOK_URL=https://webhook.site/96951d2c-431f-452d-84bf
 INGEST_TOKEN=secret123
 PORT=3000
 ```
@@ -53,6 +53,10 @@ npm run test:e2e
 # Run tests with coverage
 npm run test:cov
 ```
+
+## Webhook URL (viewable)
+
+[https://webhook.site/#!/view/96951d2c-431f-452d-84bf-272c8d87d5ab](https://webhook.site/#!/view/96951d2c-431f-452d-84bf-272c8d87d5ab)
 
 ## AI Assistance Used
 
@@ -217,12 +221,7 @@ curl http://localhost:3000/api/v1/health
 
 **E2E Tests:**
 
-- Complete ingestion flow
-- Alert webhook delivery
-- Latest reading retrieval (cache hit & fallback)
-- Site summary aggregation
-- Authentication enforcement
-- Invalid input rejection
+- ⚠️ Currently not working at the moment. Will work on in after the time limit
 
 ## Project Structure
 
