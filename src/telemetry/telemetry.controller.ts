@@ -5,6 +5,7 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
   HttpCode,
   HttpStatus,
   NotFoundException,
@@ -14,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { TelemetryService } from './telemetry.service';
 import { TelemetryDto, SiteSummaryQueryDto } from './dto/telemetry.dto';
+import { AuthGuard } from './guards/auth.guard';
 
 @Controller('api/v1')
 export class TelemetryController {
@@ -22,6 +24,7 @@ export class TelemetryController {
   constructor(private readonly telemetryService: TelemetryService) {}
 
   @Post('telemetry')
+  @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async ingestTelemetry(
