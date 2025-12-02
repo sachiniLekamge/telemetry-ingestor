@@ -8,6 +8,7 @@ import {
   ArrayMinSize,
   Min,
   Max,
+  IsDefined,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -36,6 +37,7 @@ export class TelemetryDto {
   @IsNotEmpty()
   ts: string;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => MetricsDto)
   metrics: MetricsDto;
@@ -46,6 +48,7 @@ export class TelemetryArrayDto {
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => TelemetryDto)
+  @IsDefined({ each: true })
   data: TelemetryDto[];
 }
 
